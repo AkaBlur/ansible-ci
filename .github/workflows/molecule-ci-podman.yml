@@ -1,0 +1,97 @@
+---
+
+name: Molecule Podman CI
+
+on:
+  workflow_call:
+    inputs:
+      scenario_name:
+        description: Scenario to run for this CI job
+        type: string
+        required: true
+      
+      runner_cleanup:
+        description: Remove unnecessary runner files
+        type: boolean
+        required: false
+        default: false
+
+env:
+  PYTHON_VERSION: "3.13"
+
+permissions:
+  contents: read
+
+jobs:
+  molecule-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show disk-usage
+        if: ${{ inputs.runner_cleanup }}
+        run: df -h
+
+      # https://dev.to/mathio/squeezing-disk-space-from-github-actions-runners-an-engineers-guide-3pjg
+      - name: Aggressive runner cleanup
+        if: ${{ inputs.runner_cleanup }}
+        run: |
+          # Remove Java (JDKs)
+          sudo rm -rf /usr/lib/jvm
+
+          # Remove .NET SDKs
+          sudo rm -rf /usr/share/dotnet
+
+          # Remove Swift toolchain
+          sudo rm -rf /usr/share/swift
+
+          # Remove Haskell (GHC)
+          sudo rm -rf /usr/local/.ghcup
+
+          # Remove Julia
+          sudo rm -rf /usr/local/julia*
+
+          # Remove Android SDKs
+          sudo rm -rf /usr/local/lib/android
+
+          # Remove Chromium (optional if not using for browser tests)
+          sudo rm -rf /usr/local/share/chromium
+
+          # Remove Microsoft/Edge and Google Chrome builds
+          sudo rm -rf /opt/microsoft /opt/google
+
+          # Remove Azure CLI
+          sudo rm -rf /opt/az
+
+          # Remove PowerShell
+          sudo rm -rf /usr/local/share/powershell
+
+          # Remove CodeQL and other toolcaches
+          sudo rm -rf /opt/hostedtoolcache
+
+          docker system prune -af || true
+          docker builder prune -af || true
+          df -h
+        
+      - name: Checkout repo
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+      
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python requirements
+        run: |
+          python -m pip install --upgrade pip
+          [[ -f requirements.txt ]] && pip install -r requirements.txt
+
+      - name: Install podman
+        run: sudo apt-get install -y podman
+      
+      - name: Verify podman installation
+        run: podman --version
+
+      - name: Run Molecule CI
+        run: molecule test -s ${{ inputs.scenario_name }}
