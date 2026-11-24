@@ -19,9 +19,6 @@ on:
 env:
   PYTHON_VERSION: "3.13"
 
-permissions:
-  contents: read
-
 jobs:
   molecule-ci:
     runs-on: ubuntu-latest
