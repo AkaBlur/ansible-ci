@@ -1,0 +1,29 @@
+---
+
+name: Ansible Galaxy Role Upload
+
+on:
+  workflow_call:
+    inputs:
+      role_owner:
+        description:
+        type: string
+        required: true
+      
+      role_name:
+        description:
+        type: string
+        required: true
+
+    secrets:
+      galaxy_token:
+        description: Ansible Galaxy access token
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Import Ansible role in Galaxy
+        run: |
+          ansible-galaxy role import ${{ inputs.role_owner }} ${{ inputs.role_name }} --token ${{ secrets.galaxy_token }}
