@@ -17,7 +17,7 @@ jobs:
       - name: Extract repository role name
         id: role_name
         run: |
-          _ROLE=${GITHUB_REPOSITORY#*-};
+          _ROLE=${GITHUB_REPOSITORY#*/};
           echo "role_name=${_ROLE}" >> $GITHUB_OUTPUT
 
       - name: Import Ansible role in Galaxy
