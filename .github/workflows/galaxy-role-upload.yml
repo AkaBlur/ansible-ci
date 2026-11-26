@@ -14,6 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Convert repository owner name
+        id: repo_owner
+        run: |
+          _NAME=$(echo ${GITHUB_REPOSITORY_OWNER,,} | tr ".-" "_");
+          echo "repo_owner=${_NAME}" >> $GITHUB_OUTPUT
+
+
       - name: Extract repository role name
         id: role_name
         run: |
@@ -22,4 +29,4 @@ jobs:
 
       - name: Import Ansible role in Galaxy
         run: |
-          ansible-galaxy role import ${{ github.repository_owner }} ${{ steps.role_name.outputs.role_name }} --token ${{ secrets.galaxy_token }}
+          ansible-galaxy role import ${{ steps.repo_owner.outputs.repo_owner }} ${{ steps.role_name.outputs.role_name }} --token ${{ secrets.galaxy_token }}
